@@ -32,9 +32,11 @@ wheels/
 *.fig
 *.m~
 
-# Data files (large .mat files)
+# Data files (large .mat files) - but allow processed clipped files
 *.mat
-Results/
+!**/aggregated_run_sol_data_FFT_normalized_Clipped.mat
+# Raw simulation results folder (uncomment to exclude)
+# Results/
 
 # IDE
 .vscode/
