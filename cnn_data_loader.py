@@ -98,9 +98,9 @@ def load_data_sets():
                 # Create labels array matching the number of samples in X
                 Y_labels = np.full(X.shape[0], Y)  # One label per sample
                 Y_train_list.append(Y_labels)
-                print(f"    ✓ {damage}: Shape {X.shape}, Label: {Y}")
+                print(f"    {damage}: Shape {X.shape}, Label: {Y}")
             except Exception as e:
-                print(f"    ✗ Failed to load {damage}: {e}")
+                print(f"    Failed to load {damage}: {e}")
     
     # Load test data (bridge: 15m)
     print("\nLoading test data from bridge: 15m")
@@ -112,9 +112,9 @@ def load_data_sets():
                 X_test_list.append(X)
                 Y_labels = np.full(X.shape[0], Y)
                 Y_test_list.append(Y_labels)
-                print(f"    ✓ {damage}: Shape {X.shape}, Label: {Y}")
+                print(f"    {damage}: Shape {X.shape}, Label: {Y}")
             except Exception as e:
-                print(f"    ✗ Failed to load {damage}: {e}")
+                print(f"    Failed to load {damage}: {e}")
     
     # Combine all arrays
     if not X_train_list:
@@ -185,7 +185,7 @@ if __name__ == '__main__':
         print(f"  Y_test.dtype = {Y_test.dtype}")
         
         print("\n" + "=" * 60)
-        print("✓ All data loaded successfully and ready for CNN training!")
+        print("All data loaded successfully and ready for CNN training!")
         print("=" * 60 + "\n")
         
     except FileNotFoundError as e:

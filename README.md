@@ -72,7 +72,7 @@ The model uses a 1D CNN with:
 python train_cnn.py
 ```
 
-This will:
+This will run on CPU and:
 1. Load the clipped data (20 files)
 2. Build the CNN model
 3. Train for up to 50 epochs with early stopping

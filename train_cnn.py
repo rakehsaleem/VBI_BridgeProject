@@ -14,55 +14,11 @@ try:
     from tensorflow.keras.utils import to_categorical
     from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
     from sklearn.metrics import classification_report, confusion_matrix
-    print("✓ TensorFlow/Keras imported successfully")
+    print("TensorFlow/Keras imported successfully")
 except ImportError as e:
-    print(f"❌ Error importing TensorFlow/Keras: {e}")
+    print(f"ERROR: Error importing TensorFlow/Keras: {e}")
     print("Please install: pip install tensorflow")
     sys.exit(1)
-
-
-def setup_gpu():
-    """Configure GPU for optimal performance."""
-    print("\n" + "="*70)
-    print("GPU Configuration")
-    print("="*70)
-    
-    # List all physical devices
-    physical_devices = tf.config.list_physical_devices()
-    print(f"Available devices: {len(physical_devices)}")
-    for device in physical_devices:
-        print(f"  - {device}")
-    
-    # Check for GPU
-    gpus = tf.config.list_physical_devices('GPU')
-    if gpus:
-        print(f"\n✓ Found {len(gpus)} GPU(s)")
-        try:
-            # Enable memory growth to prevent allocating all GPU memory
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            print("✓ GPU memory growth enabled")
-            
-            # List GPU details
-            for i, gpu in enumerate(gpus):
-                print(f"  GPU {i}: {gpu.name}")
-                try:
-                    gpu_details = tf.config.experimental.get_device_details(gpu)
-                    if gpu_details:
-                        print(f"    Device Type: {gpu_details.get('device_name', 'Unknown')}")
-                except:
-                    pass
-            
-            print(f"\n✓ Using GPU for training (expect 10-50x speedup vs CPU)")
-        except RuntimeError as e:
-            print(f"⚠ Error configuring GPU: {e}")
-            print("  Will continue with CPU")
-    else:
-        print("\n⚠ No GPU detected. Using CPU for training.")
-        print("  Training will be slower. Consider installing CUDA/cuDNN.")
-        print("  See GPU_SETUP.md for instructions.")
-    
-    print("="*70 + "\n")
 
 
 def ensure_3d_inputs(X_train: np.ndarray, X_test: np.ndarray):
@@ -169,7 +125,7 @@ def plot_training_history(history, model_name='Model'):
     output_dir.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     plt.savefig(output_dir / f'{model_name}_{timestamp}_history.png', dpi=300, bbox_inches='tight')
-    print(f"\n✓ Training history saved to {output_dir / f'{model_name}_{timestamp}_history.png'}")
+    print(f"\nTraining history saved to {output_dir / f'{model_name}_{timestamp}_history.png'}")
     
     plt.show()
 
@@ -208,7 +164,7 @@ def plot_confusion_matrix(y_true, y_pred, class_names, model_name='Model'):
     output_dir.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     plt.savefig(output_dir / f'{model_name}_{timestamp}_confusion.png', dpi=300, bbox_inches='tight')
-    print(f"✓ Confusion matrix saved to {output_dir / f'{model_name}_{timestamp}_confusion.png'}")
+    print(f"Confusion matrix saved to {output_dir / f'{model_name}_{timestamp}_confusion.png'}")
     
     plt.show()
 
@@ -241,20 +197,17 @@ def main():
     print("Bridge Damage Classification - CNN Training")
     print("="*70)
     
-    # Setup GPU
-    setup_gpu()
-    
     # Load data
-    print("\n[1/7] Loading data...")
+    print("\n[1/6] Loading data...")
     try:
         X_train, Y_train, X_test, Y_test = load_data_sets()
-        print("✓ Data loaded successfully")
+        print("Data loaded successfully")
     except Exception as e:
-        print(f"❌ Error loading data: {e}")
+        print(f"ERROR: Error loading data: {e}")
         sys.exit(1)
     
     # Prepare inputs for CNN
-    print("\n[2/7] Preprocessing data...")
+    print("\n[2/6] Preprocessing data...")
     X_train, X_test = ensure_3d_inputs(X_train, X_test)
     
     # One-hot encode labels
@@ -263,10 +216,10 @@ def main():
     Y_train_cat = to_categorical(Y_train, num_classes)
     Y_test_cat = to_categorical(Y_test, num_classes)
     
-    print(f"✓ Training samples: {X_train.shape[0]}")
-    print(f"✓ Test samples: {X_test.shape[0]}")
-    print(f"✓ Input shape: {X_train.shape[1:]}")
-    print(f"✓ Number of classes: {num_classes} {class_names}")
+    print(f"Training samples: {X_train.shape[0]}")
+    print(f"Test samples: {X_test.shape[0]}")
+    print(f"Input shape: {X_train.shape[1:]}")
+    print(f"Number of classes: {num_classes} {class_names}")
     
     # Create output directory
     output_dir = Path('training_results')
@@ -281,13 +234,13 @@ def main():
     ]
     
     # Train CNN
-    print("\n[3/7] Building CNN model...")
+    print("\n[3/6] Building CNN model...")
     cnn_model = build_cnn(input_shape=(X_train.shape[1], X_train.shape[2]), num_classes=num_classes)
-    print("✓ Model built successfully")
+    print("Model built successfully")
     print("\nModel Architecture:")
     cnn_model.summary()
     
-    print("\n[4/7] Training CNN model...")
+    print("\n[4/6] Training CNN model...")
     history_cnn = cnn_model.fit(
         X_train, Y_train_cat,
         batch_size=32,
@@ -300,14 +253,14 @@ def main():
     # Save model
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     cnn_model.save(output_dir / f'cnn_model_{timestamp}.h5')
-    print(f"\n✓ Model saved to {output_dir / f'cnn_model_{timestamp}.h5'}")
+    print(f"\nModel saved to {output_dir / f'cnn_model_{timestamp}.h5'}")
     
     # Evaluate CNN
-    print("\n[5/7] Evaluating CNN model...")
+    print("\n[5/6] Evaluating CNN model...")
     evaluate_model(cnn_model, X_test, Y_test, class_names, 'CNN')
     
     # Plot training history
-    print("\n[6/7] Plotting training history...")
+    print("\n[6/6] Plotting training history...")
     plot_training_history(history_cnn, 'CNN')
     
     print(f"\n{'='*70}")
