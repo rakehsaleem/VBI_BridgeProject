@@ -21,6 +21,50 @@ except ImportError as e:
     sys.exit(1)
 
 
+def setup_gpu():
+    """Configure GPU for optimal performance."""
+    print("\n" + "="*70)
+    print("GPU Configuration")
+    print("="*70)
+    
+    # List all physical devices
+    physical_devices = tf.config.list_physical_devices()
+    print(f"Available devices: {len(physical_devices)}")
+    for device in physical_devices:
+        print(f"  - {device}")
+    
+    # Check for GPU
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        print(f"\n✓ Found {len(gpus)} GPU(s)")
+        try:
+            # Enable memory growth to prevent allocating all GPU memory
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+            print("✓ GPU memory growth enabled")
+            
+            # List GPU details
+            for i, gpu in enumerate(gpus):
+                print(f"  GPU {i}: {gpu.name}")
+                try:
+                    gpu_details = tf.config.experimental.get_device_details(gpu)
+                    if gpu_details:
+                        print(f"    Device Type: {gpu_details.get('device_name', 'Unknown')}")
+                except:
+                    pass
+            
+            print(f"\n✓ Using GPU for training (expect 10-50x speedup vs CPU)")
+        except RuntimeError as e:
+            print(f"⚠ Error configuring GPU: {e}")
+            print("  Will continue with CPU")
+    else:
+        print("\n⚠ No GPU detected. Using CPU for training.")
+        print("  Training will be slower. Consider installing CUDA/cuDNN.")
+        print("  See GPU_SETUP.md for instructions.")
+    
+    print("="*70 + "\n")
+
+
 def ensure_3d_inputs(X_train: np.ndarray, X_test: np.ndarray):
     """Ensure inputs are 3D for 1D-CNN: (samples, timesteps, channels).
     If arrays are 2D (samples, timesteps), add a singleton channel dim.
@@ -197,8 +241,11 @@ def main():
     print("Bridge Damage Classification - CNN Training")
     print("="*70)
     
+    # Setup GPU
+    setup_gpu()
+    
     # Load data
-    print("\n[1/6] Loading data...")
+    print("\n[1/7] Loading data...")
     try:
         X_train, Y_train, X_test, Y_test = load_data_sets()
         print("✓ Data loaded successfully")
@@ -207,7 +254,7 @@ def main():
         sys.exit(1)
     
     # Prepare inputs for CNN
-    print("\n[2/6] Preprocessing data...")
+    print("\n[2/7] Preprocessing data...")
     X_train, X_test = ensure_3d_inputs(X_train, X_test)
     
     # One-hot encode labels
@@ -234,13 +281,13 @@ def main():
     ]
     
     # Train CNN
-    print("\n[3/6] Building CNN model...")
+    print("\n[3/7] Building CNN model...")
     cnn_model = build_cnn(input_shape=(X_train.shape[1], X_train.shape[2]), num_classes=num_classes)
     print("✓ Model built successfully")
     print("\nModel Architecture:")
     cnn_model.summary()
     
-    print("\n[4/6] Training CNN model...")
+    print("\n[4/7] Training CNN model...")
     history_cnn = cnn_model.fit(
         X_train, Y_train_cat,
         batch_size=32,
@@ -256,11 +303,11 @@ def main():
     print(f"\n✓ Model saved to {output_dir / f'cnn_model_{timestamp}.h5'}")
     
     # Evaluate CNN
-    print("\n[5/6] Evaluating CNN model...")
+    print("\n[5/7] Evaluating CNN model...")
     evaluate_model(cnn_model, X_test, Y_test, class_names, 'CNN')
     
     # Plot training history
-    print("\n[6/6] Plotting training history...")
+    print("\n[6/7] Plotting training history...")
     plot_training_history(history_cnn, 'CNN')
     
     print(f"\n{'='*70}")
