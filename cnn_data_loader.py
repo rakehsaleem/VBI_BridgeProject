@@ -64,10 +64,20 @@ def load_bridge_data(data_dir, simulation_folder, damage_condition):
     
     X = data[config['DATA_VARIABLE_NAME']]
     
+    # Reshape from (2000, 250) to (1000, 250, 2)
+    # Rows 0-999: sensor 1, Rows 1000-1999: sensor 2
+    # Combine them into (samples, frequency_bins, sensors)
+    num_samples = X.shape[0] // 2
+    sensor1 = X[:num_samples, :]  # First half: sensor 1
+    sensor2 = X[num_samples:, :]  # Second half: sensor 2
+    
+    # Stack to create (1000, 250, 2) shape
+    X_reshaped = np.stack([sensor1, sensor2], axis=2)  # (num_samples, 250, 2)
+    
     # Extract damage level from damage condition (DC0 -> 0, DC1 -> 1, etc.)
     damage_level = int(damage_condition.replace('DC', ''))
     
-    return X, damage_level
+    return X_reshaped, damage_level
 
 
 def load_data_sets():

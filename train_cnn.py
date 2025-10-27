@@ -22,18 +22,6 @@ except ImportError as e:
     sys.exit(1)
 
 
-def ensure_3d_inputs(X_train: np.ndarray, X_test: np.ndarray):
-    """Ensure inputs are 3D for 1D-CNN: (samples, timesteps, channels).
-    If arrays are 2D (samples, timesteps), add a singleton channel dim.
-    Also cast to float32 for TF efficiency.
-    """
-    if X_train.ndim == 2:
-        X_train = X_train[..., np.newaxis]
-    if X_test.ndim == 2:
-        X_test = X_test[..., np.newaxis]
-    return X_train.astype('float32'), X_test.astype('float32')
-
-
 def build_cnn(input_shape, num_classes: int) -> Sequential:
     """Build a 1D CNN model for damage classification."""
     model = Sequential([
@@ -209,7 +197,9 @@ def main():
     
     # Prepare inputs for CNN
     print("\n[2/6] Preprocessing data...")
-    X_train, X_test = ensure_3d_inputs(X_train, X_test)
+    # Data is already in correct shape: (samples, 250, 2)
+    X_train = X_train.astype('float32')
+    X_test = X_test.astype('float32')
     
     # One-hot encode labels
     num_classes = int(len(np.unique(Y_train)))
