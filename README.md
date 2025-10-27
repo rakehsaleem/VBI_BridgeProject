@@ -1,48 +1,115 @@
 # VBI Bridge Project
 
 ## Overview
-Vehicle-Bridge Interaction (VBI) analysis project for bridge damage detection using Convolutional Neural Networks (CNN).
+Vehicle-Bridge Interaction (VBI) analysis project for bridge damage detection using Convolutional Neural Networks (CNN). This project classifies bridge damage conditions (DC0-DC4) from vehicle-bridge interaction FFT spectra.
+
+## Quick Start
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/rakehsaleem/VBI_BridgeProject.git
+cd VBI_BridgeProject
+```
+
+### 2. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Train the CNN
+```bash
+python train_cnn.py
+```
+
+The model will be saved in `training_results/` with:
+- Best model checkpoint: `best_cnn_model.h5`
+- Training history plots
+- Confusion matrix
+- Classification report
 
 ## Project Structure
-- **clip.py**: Script to clip FFT normalized data to first 250 frequency bins
-- **cnn_data_loader.py**: Data loader for CNN training that automatically splits bridges (11m, 13m, 17m for training; 15m for testing)
-- **Results/**: Contains Monte Carlo simulation results with 4 different bridges and 5 damage conditions each
+- **train_cnn.py**: Main CNN training script with model saving and evaluation
+- **cnn_data_loader.py**: Data loader that automatically splits bridges for training/testing
+- **clip.py**: Script to clip FFT data to first 250 frequency bins (already done)
+- **Results/**: Contains 20 pre-processed clipped data files
+- **requirements.txt**: Python dependencies
 
-## Data Processing Pipeline
+## Dataset Details
 
-### 1. Data Clipping
-Use `clip.py` to clip aggregated FFT normalized data to 250 frequency bins:
+### Training Data (3 bridges, 15 damage condition files):
+- **11m Bridge**: Sim1 - DC0, DC1, DC2, DC3, DC4
+- **13m Bridge**: Sim2 - DC0, DC1, DC2, DC3, DC4  
+- **17m Bridge**: Sim4 - DC0, DC1, DC2, DC3, DC4
+
+### Test Data (1 bridge, 5 damage condition files):
+- **15m Bridge**: Sim3 - DC0, DC1, DC2, DC3, DC4
+
+### Damage Conditions:
+- **DC0**: No damage (baseline)
+- **DC1**: Light damage
+- **DC2**: Moderate damage
+- **DC3**: Severe damage
+- **DC4**: Critical damage
+
+### Data Shape:
+- Input: (samples, 250, 1) - FFT spectra with 250 frequency bins
+- Output: (samples,) - Damage level labels (0-4)
+
+## CNN Architecture
+
+The model uses a 1D CNN with:
+- **3 Convolutional blocks** with BatchNormalization and MaxPooling
+- **32 → 64 → 128** filters
+- **Dropout layers** (0.25-0.5) for regularization
+- **Dense layers** (128 → 64 → 5 classes)
+- **Early stopping** based on validation loss
+- **Model checkpointing** saves best model during training
+
+## Usage
+
+### Train the Model
+```bash
+python train_cnn.py
+```
+
+This will:
+1. Load the clipped data (20 files)
+2. Build the CNN model
+3. Train for up to 50 epochs with early stopping
+4. Save the best model
+5. Generate plots and evaluation metrics
+
+### Load and Test Data Manually
+```python
+from cnn_data_loader import load_data_sets
+
+X_train, Y_train, X_test, Y_test = load_data_sets()
+print(f"Training shape: {X_train.shape}")
+print(f"Test shape: {X_test.shape}")
+```
+
+### Re-create Clipped Data (if needed)
 ```bash
 python clip.py
 ```
 
-### 2. Data Loading
-Use `cnn_data_loader.py` to load and organize data for CNN training:
-```bash
-python cnn_data_loader.py
-```
-
-The loader automatically:
-- Loads training data from bridges: 11m (Sim1), 13m (Sim2), 17m (Sim4)
-- Loads test data from bridge: 15m (Sim3)
-- Combines all 5 damage conditions (DC0-DC4) for each bridge
-- Returns X_train, Y_train, X_test, Y_test ready for Keras/TensorFlow
-
-## Data Structure
-Each simulation contains 5 damage conditions:
-- DC0: No damage
-- DC1: Light damage
-- DC2: Moderate damage
-- DC3: Severe damage
-- DC4: Critical damage
-
 ## Dependencies
-- numpy
-- scipy
-- matplotlib (for visualization)
-- tensorflow/keras (for CNN training)
+- numpy>=1.21.0
+- scipy>=1.7.0
+- tensorflow>=2.10.0
+- matplotlib>=3.5.0
+- scikit-learn>=1.0.0
+
+## Output Files
+
+After training, you'll find in `training_results/`:
+- `best_cnn_model.h5` - Best model checkpoint (val_accuracy)
+- `cnn_model_TIMESTAMP.h5` - Final saved model
+- Training history plots
+- Confusion matrix visualization
+- Classification report in console
 
 ## Authors
-- [Your Name]
-- [Collaborator Name]
+- Rakeh Saleem (@rakehsaleem)
+- [Your Collaborator Name]
 
