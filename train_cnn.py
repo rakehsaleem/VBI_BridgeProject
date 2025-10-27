@@ -13,6 +13,7 @@ try:
     from tensorflow.keras.layers import Dense, Conv1D, MaxPooling1D, Flatten, Dropout, BatchNormalization
     from tensorflow.keras.utils import to_categorical
     from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+    from tensorflow.keras.metrics import TopKCategoricalAccuracy
     from sklearn.metrics import classification_report, confusion_matrix
     print("TensorFlow/Keras imported successfully")
 except ImportError as e:
@@ -66,7 +67,7 @@ def build_cnn(input_shape, num_classes: int) -> Sequential:
     model.compile(
         optimizer='adam',
         loss='categorical_crossentropy',
-        metrics=['accuracy', 'top_3_categorical_accuracy']
+        metrics=['accuracy', TopKCategoricalAccuracy(k=3)]
     )
     
     return model
@@ -90,7 +91,7 @@ def build_dense_mlp(input_shape, num_classes: int) -> Sequential:
     model.compile(
         optimizer='adam',
         loss='categorical_crossentropy',
-        metrics=['accuracy', 'top_3_categorical_accuracy']
+        metrics=['accuracy', TopKCategoricalAccuracy(k=3)]
     )
     
     return model
