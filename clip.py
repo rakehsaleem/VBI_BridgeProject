@@ -115,7 +115,7 @@ def batch_clip_and_save():
             save_data = {config['OUTPUT_VARIABLE_NAME']: clipped_array}
             sio.savemat(str(output_path), save_data)
             
-            print(f"✓ Clipped & Saved: {filepath.parent.name}/{output_filename}")
+            print(f"[OK] Clipped & Saved: {filepath.parent.name}/{output_filename}")
             print(f"  Shape: {original_array.shape} -> {clipped_array.shape}")
             processed_count += 1
             
@@ -130,10 +130,7 @@ def batch_clip_and_save():
 # --- EXECUTION BLOCK ---
 
 def main():
-    batch_clip_and_save() 
-    
-    # Pause the console for viewing output
-    input("Press Enter to close this window...")
+    batch_clip_and_save()
 
 if __name__ == '__main__':
     main()
