@@ -27,12 +27,24 @@ The model will be saved in `training_results/` with:
 - Confusion matrix
 - Classification report
 
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system architecture and data flow.
+
+**Summary:**
+- **Data**: 4 bridges (11m, 13m, 15m, 17m) × 5 damage conditions (DC0-DC4)
+- **Input Shape**: (samples, 250, 2) → 250 frequency bins × 2 sensors
+- **Output**: 5 classes (DC0-DC4 damage levels)
+- **Training**: 3 bridges (11m, 13m, 17m) → 15,000 samples
+- **Test**: 1 bridge (15m) → 5,000 samples
+
 ## Project Structure
 - **train_cnn.py**: Main CNN training script with model saving and evaluation
-- **cnn_data_loader.py**: Data loader that automatically splits bridges for training/testing
-- **clip.py**: Script to clip FFT data to first 250 frequency bins (already done)
+- **cnn_data_loader.py**: Data loader that reshapes data and splits bridges for training/testing
+- **clip.py**: Script to clip FFT data to first 250 frequency bins
 - **Results/**: Contains 20 pre-processed clipped data files
 - **requirements.txt**: Python dependencies
+- **ARCHITECTURE.md**: Detailed architecture and data flow diagrams
 
 ## Dataset Details
 
@@ -52,8 +64,13 @@ The model will be saved in `training_results/` with:
 - **DC4**: Critical damage
 
 ### Data Shape:
-- Input: (samples, 250, 1) - FFT spectra with 250 frequency bins
+- Input: (samples, 250, 2) - 250 frequency bins × 2 sensors
 - Output: (samples,) - Damage level labels (0-4)
+
+**Data Format:**
+- Each sample represents one vehicle passing over the bridge
+- Contains readings from 2 sensors (sensor 1 and sensor 2)
+- FFT normalized spectra with 250 frequency bins per sensor
 
 ## CNN Architecture
 
