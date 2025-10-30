@@ -1,3 +1,24 @@
+### 2025-10-30 — Domain Adaptation (Optimized) Training Summary
+
+- Best validation loss (full training): 0.7695 (early stopped at epoch 15/30)
+- Evaluation on target bridge:
+  - DC0 accuracy: 0.9960
+  - DC1–DC4 accuracy: 0.0010
+    - DC1: 0.0000
+    - DC2: 0.0020
+    - DC3: 0.0000
+    - DC4: 0.0020
+  - Combined (DC0–DC4) accuracy: 0.2000
+
+Observations:
+- Model nearly perfect on labeled DC0 but fails to generalize to unseen DC1–DC4.
+- Domain alignment and graph transfer helped source pretraining (high source accuracy) but target multi-class generalization remains poor.
+
+Follow-ups:
+- Increase labeled target coverage beyond DC0 (few-shot labels for DC1–DC4).
+- Strengthen graph constraints toward class-consistent neighbors; consider hard negative mining.
+- Adjust loss weights to upweight target adaptation (β, γ) and tune GRL strength.
+
 # Domain Adaptation Training Analysis
 
 ## Training Results Summary

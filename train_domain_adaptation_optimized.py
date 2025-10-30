@@ -364,6 +364,34 @@ def hyperparameter_search(
             'lr': 0.0001,
             'target_weight': 4.0
         },
+        # Stronger domain alignment candidates
+        {
+            'alpha': 0.8,
+            'beta': 0.9,
+            'gamma_mmd': 0.6,
+            'delta_consistency': 0.2,
+            'lambda_reversal': 1.2,
+            'lr': 0.0001,
+            'target_weight': 5.0
+        },
+        {
+            'alpha': 0.7,
+            'beta': 1.0,
+            'gamma_mmd': 0.8,
+            'delta_consistency': 0.25,
+            'lambda_reversal': 1.3,
+            'lr': 0.00008,
+            'target_weight': 7.0
+        },
+        {
+            'alpha': 0.85,
+            'beta': 0.8,
+            'gamma_mmd': 0.5,
+            'delta_consistency': 0.3,
+            'lambda_reversal': 1.1,
+            'lr': 0.00012,
+            'target_weight': 6.0
+        },
     ]
     
     results = []

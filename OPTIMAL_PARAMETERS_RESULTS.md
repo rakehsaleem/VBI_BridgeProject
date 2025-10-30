@@ -1,3 +1,17 @@
+### 2025-10-30 Domain Adaptation (Optimized) — Best Hyperparameters
+
+- alpha: 0.9
+- beta: 0.6
+- gamma_mmd: 0.3
+- delta_consistency: 0.15
+- lambda_reversal: 0.8
+- lr: 0.00015
+- target_weight: 3.5
+
+Notes:
+- Best validation loss: 0.7695 (during full training early-stop)
+- Models saved under `domain_adaptation_results_optimized/` with timestamped filenames.
+
 # Optimal Parameters Training Results
 
 ## Results Summary
