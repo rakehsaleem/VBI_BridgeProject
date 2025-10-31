@@ -29,21 +29,21 @@ def build_feature_extractor(input_shape=(250, 2), feature_dim=256):
     x = Conv1D(32, kernel_size=5, activation='relu', padding='same')(inputs)
     x = BatchNormalization()(x)
     x = MaxPooling1D(pool_size=2)(x)
-    x = Dropout(0.25)(x)
+    x = Dropout(0.35)(x)
     
     x = Conv1D(64, kernel_size=5, activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
     x = MaxPooling1D(pool_size=2)(x)
-    x = Dropout(0.25)(x)
+    x = Dropout(0.35)(x)
     
     x = Conv1D(128, kernel_size=3, activation='relu', padding='same')(x)
     x = BatchNormalization()(x)
     x = MaxPooling1D(pool_size=2)(x)
-    x = Dropout(0.3)(x)
+    x = Dropout(0.4)(x)
     
     x = Flatten()(x)
     x = Dense(256, activation='relu')(x)
-    x = Dropout(0.5)(x)
+    x = Dropout(0.6)(x)
     x = Dense(feature_dim, activation='relu', name='features')(x)
     
     model = Model(inputs=inputs, outputs=x, name='feature_extractor')
@@ -210,7 +210,8 @@ class GradientReversalLayer(keras.layers.Layer):
     """
     def __init__(self, lambda_coeff=1.0, **kwargs):
         super().__init__(**kwargs)
-        self.lambda_coeff = lambda_coeff
+        # Make lambda configurable at runtime
+        self.lambda_coeff = tf.Variable(lambda_coeff, trainable=False, dtype=tf.float32)
     
     @tf.custom_gradient
     def grad_reverse(self, x):
@@ -222,9 +223,12 @@ class GradientReversalLayer(keras.layers.Layer):
     def call(self, inputs):
         return self.grad_reverse(inputs)
     
+    def set_lambda(self, new_lambda: float):
+        self.lambda_coeff.assign(tf.cast(new_lambda, tf.float32))
+    
     def get_config(self):
         config = super().get_config()
-        config.update({'lambda_coeff': self.lambda_coeff})
+        config.update({'lambda_coeff': float(self.lambda_coeff.numpy())})
         return config
 
 

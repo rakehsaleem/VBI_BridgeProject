@@ -21,7 +21,7 @@ def mmd_loss(source_features, target_features, kernel='rbf', sigma=1.0):
     """
     if kernel == 'rbf':
         # RBF kernel: k(x, y) = exp(-||x-y||^2 / (2*sigma^2))
-        def rbf_kernel(X, Y):
+        def rbf_kernel(X, Y, s):
             # X: (N, D), Y: (M, D)
             # Compute ||x_i - y_j||^2 for all pairs
             XX = tf.reduce_sum(X * X, axis=1, keepdims=True)  # (N, 1)
@@ -30,12 +30,25 @@ def mmd_loss(source_features, target_features, kernel='rbf', sigma=1.0):
             
             # ||x_i - y_j||^2 = ||x_i||^2 + ||y_j||^2 - 2*x_i^T*y_j
             distances_sq = XX + tf.transpose(YY) - 2 * XY
-            return tf.exp(-distances_sq / (2 * sigma ** 2))
+            return tf.exp(-distances_sq / (2 * s ** 2))
         
-        # Compute kernel matrices
-        K_ss = rbf_kernel(source_features, source_features)  # (N_s, N_s)
-        K_tt = rbf_kernel(target_features, target_features)  # (N_t, N_t)
-        K_st = rbf_kernel(source_features, target_features)  # (N_s, N_t)
+        # Support multi-kernel by allowing sigma to be a list/tuple
+        if isinstance(sigma, (list, tuple)):
+            K_ss = 0.0
+            K_tt = 0.0
+            K_st = 0.0
+            for s in sigma:
+                K_ss += rbf_kernel(source_features, source_features, s)
+                K_tt += rbf_kernel(target_features, target_features, s)
+                K_st += rbf_kernel(source_features, target_features, s)
+            K_ss /= float(len(sigma))
+            K_tt /= float(len(sigma))
+            K_st /= float(len(sigma))
+        else:
+            # Compute single-kernel matrices
+            K_ss = rbf_kernel(source_features, source_features, sigma)  # (N_s, N_s)
+            K_tt = rbf_kernel(target_features, target_features, sigma)  # (N_t, N_t)
+            K_st = rbf_kernel(source_features, target_features, sigma)  # (N_s, N_t)
         
         # MMD^2 = mean(K_ss) + mean(K_tt) - 2*mean(K_st)
         mmd_sq = (

@@ -10,7 +10,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, AdamW
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input
 from sklearn.metrics import classification_report, confusion_matrix
@@ -233,8 +233,11 @@ def train_with_hyperparameters(
     )
     
     model.compile(
-        optimizer=Adam(learning_rate=lr, clipnorm=1.0),
-        loss={'classification': 'categorical_crossentropy', 'domain': 'categorical_crossentropy'},
+        optimizer=AdamW(learning_rate=lr, weight_decay=1e-4, clipnorm=1.0),
+        loss={
+            'classification': tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
+            'domain': 'categorical_crossentropy'
+        },
         metrics=['accuracy']
     )
     
@@ -269,7 +272,7 @@ def train_with_hyperparameters(
             # MMD loss
             source_features = features[:len(source_X)]
             target_features = features[len(source_X):]
-            mmd = mmd_loss(source_features, target_features)
+            mmd = mmd_loss(source_features, target_features, kernel='rbf', sigma=[0.5, 1.0, 2.0, 4.0])
             
             total_loss = alpha * class_loss + gamma_mmd * mmd
         
@@ -417,7 +420,11 @@ def hyperparameter_search(
         # Pre-train on source (quick)
         print("  Pre-training on source...")
         pre_model = tf.keras.Sequential([feat_ext, cls])
-        pre_model.compile(optimizer=Adam(learning_rate=params['lr']), loss='categorical_crossentropy', metrics=['accuracy'])
+        pre_model.compile(
+            optimizer=AdamW(learning_rate=params['lr'], weight_decay=1e-4),
+            loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1),
+            metrics=['accuracy']
+        )
         pre_model.fit(
             source_X, to_categorical(source_Y, 5),
             batch_size=32, epochs=5, verbose=0
@@ -539,7 +546,8 @@ def train_full_model_with_best_params(best_params, source_X, source_Y, target_X_
     inputs = Input(shape=(250, 2))
     features = feature_extractor(inputs)
     class_output = classifier(features)
-    reversed_features = GradientReversalLayer(lambda_coeff=best_params['lambda_reversal'])(features)
+    grl_layer = GradientReversalLayer(lambda_coeff=0.0)
+    reversed_features = grl_layer(features)
     domain_output = domain_discriminator(reversed_features)
     
     combined_model = Model(inputs=inputs, outputs=[class_output, domain_output])
@@ -550,8 +558,8 @@ def train_full_model_with_best_params(best_params, source_X, source_Y, target_X_
         return tf.keras.losses.categorical_crossentropy(y_true, y_pred)
     
     combined_model.compile(
-        optimizer=Adam(learning_rate=best_params['lr'], clipnorm=1.0),
-        loss=['categorical_crossentropy', 'categorical_crossentropy'],
+        optimizer=AdamW(learning_rate=best_params['lr'], weight_decay=1e-4, clipnorm=1.0),
+        loss=[tf.keras.losses.CategoricalCrossentropy(label_smoothing=0.1), 'categorical_crossentropy'],
         loss_weights=[best_params['alpha'], best_params['beta']],
         metrics=['accuracy', 'accuracy']
     )
@@ -577,6 +585,10 @@ def train_full_model_with_best_params(best_params, source_X, source_Y, target_X_
     Y_val_domain = combined_bridge_ids_cat[val_indices]
     
     for epoch in range(epochs):
+        # Schedule GRL lambda: warm-up over 10 epochs
+        lambda_max = float(best_params['lambda_reversal'])
+        current_lambda = float(min(lambda_max, lambda_max * (epoch + 1) / 10.0))
+        grl_layer.set_lambda(current_lambda)
         # Standard training step
         history = combined_model.fit(
             X_train, [Y_train_class, Y_train_domain],
@@ -590,7 +602,7 @@ def train_full_model_with_best_params(best_params, source_X, source_Y, target_X_
             target_labeled_features = feature_extractor(target_X_labeled, training=True)
             
             # MMD loss
-            mmd = mmd_loss(source_features, target_labeled_features)
+            mmd = mmd_loss(source_features, target_labeled_features, kernel='rbf', sigma=[0.5, 1.0, 2.0, 4.0])
             
             # Consistency loss on unlabeled target
             consistency = 0.0
